@@ -10,13 +10,32 @@ typedef struct {
 
 char buffer[BUFSIZ];
 
+void read_frame(FILE *fp, unsigned int length) {
+    fread(buffer, sizeof(char), length, fp);
+    buffer[length + 1] = '\0';
+    return;
+}
 
 int main(int argc, char **argv)
 {
-    FILE *fp = fopen(argv[1], "rb");
+    FILE *fp = NULL;
     tty_header header;
 
-    if (fp != NULL) {
+    if (argc == 1) {
+        fp = stdin;
+    } else if (argc == 2) {
+        fp = fopen(argv[1], "rb");
+    } else {
+        perror("Wrong number of arguments");
+        fprintf(stderr, "Read from standard input\nUsage: %s\n", argv[0]);
+        fprintf(stderr, "Read from file\nUsage: %s rec.file\n", argv[0]);
+        return -1;
+    }
+
+    if (fp == NULL) {
+        perror("Could not open file.\n");
+        return -1;
+    } else {
         puts("[");
     }
 
@@ -26,8 +45,7 @@ int main(int argc, char **argv)
             perror("Buffer too small\n");
             return -1;
         } else {
-            fread(buffer, sizeof(char), header.len, fp);
-            buffer[header.len + 1] = '\0';
+            read_frame(fp, header.len);
             printf("[%d,%d,\"%s\"]", header.sec, header.usec, buffer);
         }
     }
@@ -37,8 +55,7 @@ int main(int argc, char **argv)
             perror("Buffer too small\n");
             return -1;
         } else {
-            fread(buffer, sizeof(char), header.len, fp);
-            buffer[header.len + 1] = '\0';
+            read_frame(fp, header.len);
             printf(",[%d,%d,\"%s\"]", header.sec, header.usec, buffer);
         }
     }
