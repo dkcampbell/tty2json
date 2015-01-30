@@ -21,11 +21,7 @@ void read_frame(FILE *fp, unsigned int length) {
                 buffer[j++] = '\\';
                 buffer[j++] = '0';
                 break;
-            case '\'':
-                buffer[j++] = '\\';
-                buffer[j++] = '\'';
-                break;
-            case '\"':
+           case '\"':
                 buffer[j++] = '\\';
                 buffer[j++] = '\"';
                 break;
