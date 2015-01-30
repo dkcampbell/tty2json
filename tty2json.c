@@ -11,8 +11,67 @@ typedef struct {
 char buffer[BUFSIZ];
 
 void read_frame(FILE *fp, unsigned int length) {
-    fread(buffer, sizeof(char), length, fp);
-    buffer[length + 1] = '\0';
+    int i = 0, j = 0;
+    char tmp;
+
+    for (i = 0; i < length; i++) {
+        tmp = fgetc(fp);
+        switch (tmp) {
+            case '\0':
+                buffer[j++] = '\\';
+                buffer[j++] = '0';
+                break;
+            case '\'':
+                buffer[j++] = '\\';
+                buffer[j++] = '\'';
+                break;
+            case '\"':
+                buffer[j++] = '\\';
+                buffer[j++] = '\"';
+                break;
+            case '\\':
+                buffer[j++] = '\\';
+                buffer[j++] = '\\';
+                break;
+            case '\n':
+                buffer[j++] = '\\';
+                buffer[j++] = 'n';
+                break;
+            case '\r':
+                buffer[j++] = '\\';
+                buffer[j++] = 'r';
+                break;
+            case '\v':
+                buffer[j++] = '\\';
+                buffer[j++] = 'v';
+                break;
+            case '\t':
+                buffer[j++] = '\\';
+                buffer[j++] = 't';
+                break;
+            case '\b':
+                buffer[j++] = '\\';
+                buffer[j++] = 'b';
+                break;
+            case '\f':
+                buffer[j++] = '\\';
+                buffer[j++] = 'f';
+            default:
+                if (tmp < ' ') { /* Unprintable ASCII characters */
+                    buffer[j++] = '\\';
+                    buffer[j++] = 'u';
+                    buffer[j++] = '0';
+                    buffer[j++] = '0';
+                    sprintf(buffer + j, "%02x", tmp);
+                    j += 2;
+                } else {
+                    buffer[j++] = tmp;
+                }
+                break;
+        }
+    }
+
+    buffer[j] = '\0';
     return;
 }
 
@@ -27,8 +86,7 @@ int main(int argc, char **argv)
         fp = fopen(argv[1], "rb");
     } else {
         perror("Wrong number of arguments");
-        fprintf(stderr, "Read from standard input\nUsage: %s\n", argv[0]);
-        fprintf(stderr, "Read from file\nUsage: %s rec.file\n", argv[0]);
+        fprintf(stderr, "Read from file or stdin\nUsage: %s [filename]\n", argv[0]);
         return -1;
     }
 
